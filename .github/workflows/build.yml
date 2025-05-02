@@ -100,7 +100,8 @@ jobs:
           latest: true
           tag_name: v${{ env.FLOORP_VERSION }}
           files: |
-            bin/release/floorp-portable-win64-${{ env.FLOORP_VERSION }}-*.7z
+            bin/release/*.7z
+            bin/release/*.txt
           name: Floorp Portable ${{ env.FLOORP_VERSION }}
           body: |
             # Floorp Portable ${{ env.FLOORP_VERSION }}
