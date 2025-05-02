@@ -1,0 +1,64 @@
+name: check-update
+
+on:
+  schedule:
+    - cron: "0 */12 * * *" # Run every 12 hours
+  workflow_dispatch: # Allow manual trigger
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Get current version
+        id: current
+        run: |
+          CURRENT_VERSION=$(grep "app.version =" build.properties | awk -F "= " '{print $2}')
+          echo "Current version: $CURRENT_VERSION"
+          echo "CURRENT_VERSION=$CURRENT_VERSION" >> $GITHUB_ENV
+
+      - name: Check latest Floorp version
+        id: latest
+        run: |
+          # Fetch the latest release information from Floorp GitHub releases
+          LATEST_VERSION=$(curl -s https://api.github.com/repos/Floorp-Projects/Floorp/releases/latest | jq -r .tag_name | sed 's/^v//')
+          echo "Latest version: $LATEST_VERSION"
+          echo "LATEST_VERSION=$LATEST_VERSION" >> $GITHUB_ENV
+
+          # Compare versions
+          if [ "$LATEST_VERSION" != "$CURRENT_VERSION" ]; then
+            echo "New version available!"
+            echo "NEW_VERSION_AVAILABLE=true" >> $GITHUB_ENV
+          else
+            echo "Already using the latest version."
+            echo "NEW_VERSION_AVAILABLE=false" >> $GITHUB_ENV
+          fi
+
+      - name: Create version update PR
+        if: env.NEW_VERSION_AVAILABLE == 'true'
+        uses: peter-evans/create-pull-request@v6
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: "Update Floorp version to ${{ env.LATEST_VERSION }}"
+          title: "Update to Floorp ${{ env.LATEST_VERSION }}"
+          body: |
+            This PR updates the Floorp version from ${{ env.CURRENT_VERSION }} to ${{ env.LATEST_VERSION }}.
+
+            Automated update triggered by version check workflow.
+          branch: update-floorp-${{ env.LATEST_VERSION }}
+          base: main
+          draft: false
+          labels: automated,dependency-update
+          changes: |
+            build.properties
+            sed -i 's/app.version = ${{ env.CURRENT_VERSION }}/app.version = ${{ env.LATEST_VERSION }}/g' build.properties
+
+      - name: Trigger build workflow
+        if: env.NEW_VERSION_AVAILABLE == 'true'
+        uses: peter-evans/repository-dispatch@v3
+        with:
+          token: ${{ secrets.REPO_ACCESS_TOKEN }}
+          event-type: new-version-available
+          client-payload: '{"version": "${{ env.LATEST_VERSION }}"}'

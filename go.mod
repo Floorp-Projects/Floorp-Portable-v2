@@ -1,4 +1,4 @@
-module github.com/portapps/phyrox-portable
+module github.com/Floorp-Projects/Floorp-Portable-v2
 
 go 1.24.0
 

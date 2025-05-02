@@ -1,5 +1,5 @@
 //go:generate go install -v github.com/kevinburke/go-bindata/v4/go-bindata
-//go:generate go-bindata -prefix res/ -pkg assets -o assets/assets.go res/Firefox.lnk
+//go:generate go-bindata -prefix res/ -pkg assets -o assets/assets.go res/Floorp.lnk
 //go:generate go install -v github.com/josephspurrier/goversioninfo/cmd/goversioninfo
 //go:generate goversioninfo -icon=res/papp.ico -manifest=res/papp.manifest
 package main
@@ -13,7 +13,7 @@ import (
 
 	"github.com/Jeffail/gabs"
 	"github.com/pkg/errors"
-	"github.com/portapps/phyrox-portable/assets"
+	"github.com/Floorp-Projects/Floorp-Portable-v2/assets"
 	"github.com/portapps/portapps/v3"
 	"github.com/portapps/portapps/v3/pkg/log"
 	"github.com/portapps/portapps/v3/pkg/mutex"
@@ -50,7 +50,7 @@ func init() {
 	}
 
 	// Init app
-	if app, err = portapps.NewWithCfg("phyrox-portable", "Phyrox", cfg); err != nil {
+	if app, err = portapps.NewWithCfg("floorp-portable", "Floorp", cfg); err != nil {
 		log.Fatal().Err(err).Msg("Cannot initialize application. See log file for more info.")
 	}
 }
@@ -59,7 +59,7 @@ func main() {
 	utl.CreateFolder(app.DataPath)
 	profileFolder := utl.CreateFolder(app.DataPath, "profile", cfg.Profile)
 
-	app.Process = utl.PathJoin(app.AppPath, "firefox.exe")
+	app.Process = utl.PathJoin(app.AppPath, "floorp.exe")
 	app.Args = []string{
 		"--profile",
 		profileFolder,
@@ -99,18 +99,16 @@ func main() {
 	if cfg.Cleanup {
 		defer func() {
 			utl.Cleanup([]string{
-				path.Join(os.Getenv("APPDATA"), "Mozilla", "Firefox"),
-				path.Join(os.Getenv("LOCALAPPDATA"), "Mozilla", "Firefox"),
+				path.Join(os.Getenv("APPDATA"), "Mozilla", "Floorp"),
+				path.Join(os.Getenv("LOCALAPPDATA"), "Mozilla", "Floorp"),
 				path.Join(os.Getenv("USERPROFILE"), "AppData", "LocalLow", "Mozilla"),
 			})
 		}()
 	}
 
-	// Locale
-	locale, err := checkLocale()
-	if err != nil {
-		log.Error().Err(err).Msg("Cannot set locale")
-	}
+	// Locale - Just use default locale since we don't download language packs
+	locale := defaultLocale
+	log.Info().Msgf("Using default locale: %s", locale)
 
 	// Multiple instances
 	if cfg.MultipleInstances {
@@ -166,10 +164,10 @@ pref("browser.startup.homepage_override.mstone", "ignore");
 	}
 
 	// Copy default shortcut
-	shortcutPath := path.Join(os.Getenv("APPDATA"), "Microsoft", "Windows", "Start Menu", "Programs", "Phyrox Portable.lnk")
-	defaultShortcut, err := assets.Asset("Firefox.lnk")
+	shortcutPath := path.Join(os.Getenv("APPDATA"), "Microsoft", "Windows", "Start Menu", "Programs", "Floorp Portable.lnk")
+	defaultShortcut, err := assets.Asset("Floorp.lnk")
 	if err != nil {
-		log.Error().Err(err).Msg("Cannot load asset Firefox.lnk")
+		log.Error().Err(err).Msg("Cannot load asset Floorp.lnk")
 	}
 	err = os.WriteFile(shortcutPath, defaultShortcut, 0644)
 	if err != nil {
@@ -181,7 +179,7 @@ pref("browser.startup.homepage_override.mstone", "ignore");
 		ShortcutPath:     shortcutPath,
 		TargetPath:       app.Process,
 		Arguments:        shortcut.Property{Clear: true},
-		Description:      shortcut.Property{Value: "Phyrox Portable by Portapps"},
+		Description:      shortcut.Property{Value: "Floorp Portable"},
 		IconLocation:     shortcut.Property{Value: app.Process},
 		WorkingDirectory: shortcut.Property{Value: app.AppPath},
 	})
@@ -242,27 +240,8 @@ func createPolicies() error {
 }
 
 func checkLocale() (string, error) {
-	extSourceFile := fmt.Sprintf("%s.xpi", cfg.Locale)
-	extDestFile := fmt.Sprintf("langpack-%s@firefox.mozilla.org.xpi", cfg.Locale)
-	extsFolder := utl.CreateFolder(app.AppPath, "distribution", "extensions")
-	localeXpi := utl.PathJoin(app.AppPath, "langs", extSourceFile)
-
-	// If default locale skip (already embedded)
-	if cfg.Locale == defaultLocale {
-		return cfg.Locale, nil
-	}
-
-	// Check .xpi file exists
-	if !utl.Exists(localeXpi) {
-		return defaultLocale, fmt.Errorf("XPI file does not exist in %s", localeXpi)
-	}
-
-	// Copy .xpi
-	if err := utl.CopyFile(localeXpi, utl.PathJoin(extsFolder, extDestFile)); err != nil {
-		return defaultLocale, err
-	}
-
-	return cfg.Locale, nil
+	// Since we're not downloading language packs, just return the default locale
+	return defaultLocale, nil
 }
 
 func updateAddonStartup(profileFolder string) error {

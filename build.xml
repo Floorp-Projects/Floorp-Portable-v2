@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project name="phyrox" basedir=".">
+<project name="floorp" basedir=".">
 
-  <dirname property="app.basedir" file="${ant.file.phyrox}"/>
+  <dirname property="app.basedir" file="${ant.file.floorp}"/>
   <property name="build.properties" value="${app.basedir}/build.properties"/>
   <property file="${build.properties}"/>
 
@@ -15,6 +15,24 @@
 
   <!-- Targets -->
   <target name="release" depends="release.app" description="Release"/>
+
+  <!-- Override the packaging target to skip installer creation -->
+  <target name="packaging">
+    <echo message="Packaging release..."/>
+    <if>
+      <not><equals arg1="${atf.win3264.url}" arg2=""/></not>
+      <then>
+        <property name="release.7z.filename" value="${papp.id}-${app.version}-${app.release}.7z"/>
+      </then>
+      <else>
+        <property name="release.7z.filename" value="${papp.id}-${atf.arch}-${app.version}-${app.release}.7z"/>
+      </else>
+    </if>
+
+    <!-- .7z release -->
+    <echo message="Building 7z archive only (skipping installer creation)..."/>
+    <sevenzip src="${build.path}/*" dest="${release.path}\${release.7z.filename}" format="7z"/>
+  </target>
 
   <target name="prepare">
     <echo message="Preparing release..."/>
@@ -33,14 +51,10 @@
       <fileset dir="${tmp.path}\extract2" defaultexcludes="no"/>
     </move>
 
-    <echo message="Downloading additional languages..."/>
+    <!-- Skip downloading language packs as they're not available at the specified URL -->
+    <echo message="Skipping language pack downloads for Floorp..."/>
     <property name="papp.languages.path" location="${extract.path}\langs"/>
     <mkdir dir="${papp.languages.path}"/>
-    <for list="${papp.languages}" param="lang">
-      <sequential>
-        <get dest="${papp.languages.path}\@{lang}.xpi" src="https://ftp.mozilla.org/pub/firefox/releases/${app.version}/${atf.arch}/xpi/@{lang}.xpi" skipexisting="true"/>
-      </sequential>
-    </for>
   </target>
 
 </project>

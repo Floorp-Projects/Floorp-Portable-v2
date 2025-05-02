@@ -2,11 +2,122 @@ name: build
 
 on:
   workflow_dispatch:
+    inputs:
+      version:
+        description: "Floorp version (e.g. 11.26.0)"
+        required: true
   push:
     tags:
-      - '*'
+      - "v*"
   pull_request:
 
 jobs:
   build:
-    uses: portapps/.github/.github/workflows/app-build.yml@master
+    runs-on: windows-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.24"
+          cache: true
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: "adopt"
+          java-version: "11"
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Set up Ant
+        uses: cedx/setup-ant@v4.2.0
+        with:
+          version: "1.10.15"
+
+      - name: Check environment
+        run: |
+          go version
+          java -version
+          ant -version
+          node --version
+
+      - name: Set environment variables
+        run: |
+          $FLOORP_VERSION = '${{ github.event.inputs.version }}'
+          if (-not $FLOORP_VERSION) {
+            # If tag triggered, extract version from tag name
+            if ('${{ github.ref }}'.StartsWith('refs/tags/v')) {
+              $FLOORP_VERSION = '${{ github.ref }}'.Replace('refs/tags/v', '')
+            } else {
+              # Default version from build.properties
+              $FLOORP_VERSION = (Get-Content build.properties | Where-Object { $_ -match 'app.version = (.+)' } | ForEach-Object { $matches[1] })
+            }
+          }
+          echo "FLOORP_VERSION=$FLOORP_VERSION" >> $env:GITHUB_ENV
+          echo "Using Floorp version: $FLOORP_VERSION"
+
+      - name: Update build.properties
+        run: |
+          $content = Get-Content build.properties
+          $content = $content -replace 'app.version = .+', "app.version = $env:FLOORP_VERSION"
+          $content | Set-Content build.properties
+          cat build.properties
+
+      - name: Clone portapps
+        run: |
+          git clone https://github.com/portapps/portapps.git ../portapps
+
+      - name: Prepare build
+        run: |
+          # Install required Go tools
+          go install -v github.com/kevinburke/go-bindata/v4/go-bindata
+          go install -v github.com/josephspurrier/goversioninfo/cmd/goversioninfo
+
+          # Make sure resources are ready
+          mkdir -p assets
+          if (Test-Path res/Floorp.lnk) {
+            go-bindata -prefix res/ -pkg assets -o assets/assets.go res/Floorp.lnk
+          } else {
+            cp res/Firefox.lnk res/Floorp.lnk
+            go-bindata -prefix res/ -pkg assets -o assets/assets.go res/Floorp.lnk
+          }
+
+          # Generate version info
+          goversioninfo
+
+      - name: Build portable app
+        run: |
+          ant release -Dcore.dir=../portapps
+
+      - name: List built artifacts
+        run: |
+          ls bin/release
+
+      - name: Create GitHub release
+        if: startsWith(github.ref, 'refs/tags/') || github.event_name == 'workflow_dispatch'
+        uses: softprops/action-gh-release@v2
+        with:
+          draft: true
+          files: |
+            bin/release/floorp-portable-win64-${{ env.FLOORP_VERSION }}-*.7z
+          name: Floorp Portable ${{ env.FLOORP_VERSION }}
+          body: |
+            # Floorp Portable ${{ env.FLOORP_VERSION }}
+
+            Portable version of Floorp browser that can be run from any location without installation.
+
+            ## Usage
+            1. Extract the archive to any location (e.g., USB drive)
+            2. Run `floorp-portable-win64.exe`
+
+            ## Notes
+            - Your profile and settings are stored in the same directory
+            - The application won't leave traces on the host computer
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
