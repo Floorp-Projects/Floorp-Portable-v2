@@ -1,6 +1,5 @@
 {
-  "FixedFileInfo":
-  {
+  "FixedFileInfo": {
     "FileVersion": {
       "Major": 3,
       "Minor": 16,
@@ -13,11 +12,10 @@
     "FileType": "01",
     "FileSubType": "00"
   },
-  "StringFileInfo":
-  {
+  "StringFileInfo": {
     "Comments": "",
     "CompanyName": "",
-    "FileDescription": "Floorp portable on Windows by Portapps",
+    "FileDescription": "Floorp portable on Windows By Floorp Orojects based on portapps",
     "FileVersion": "",
     "InternalName": "",
     "LegalCopyright": "https://github.com/Floorp-Projects/Floorp-Portable-v2",
@@ -25,11 +23,10 @@
     "OriginalFilename": "floorp-portable.exe",
     "PrivateBuild": "",
     "ProductName": "Floorp Portable",
-    "ProductVersion": "11.26.0.1",
+    "ProductVersion": "latest",
     "SpecialBuild": ""
   },
-  "VarFileInfo":
-  {
+  "VarFileInfo": {
     "Translation": {
       "LangID": "0409",
       "CharsetID": "04B0"

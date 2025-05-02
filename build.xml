@@ -19,16 +19,7 @@
   <!-- Override the packaging target to skip installer creation -->
   <target name="packaging">
     <echo message="Packaging release..."/>
-    <if>
-      <not><equals arg1="${atf.win3264.url}" arg2=""/></not>
-      <then>
-        <property name="release.7z.filename" value="${papp.id}-${app.version}-${app.release}.7z"/>
-      </then>
-      <else>
-        <property name="release.7z.filename" value="${papp.id}-${atf.arch}-${app.version}-${app.release}.7z"/>
-      </else>
-    </if>
-
+    <property name="release.7z.filename" value="floorp-win64.portable.7z"/>
     <!-- .7z release -->
     <echo message="Building 7z archive only (skipping installer creation)..."/>
     <sevenzip src="${build.path}/*" dest="${release.path}\${release.7z.filename}" format="7z"/>

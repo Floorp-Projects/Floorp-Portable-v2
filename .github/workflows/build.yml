@@ -6,10 +6,6 @@ on:
       version:
         description: "Floorp version (e.g. 11.26.0)"
         required: true
-  push:
-    tags:
-      - "v*"
-  pull_request:
 
 jobs:
   build:
@@ -51,13 +47,8 @@ jobs:
         run: |
           $FLOORP_VERSION = '${{ github.event.inputs.version }}'
           if (-not $FLOORP_VERSION) {
-            # If tag triggered, extract version from tag name
-            if ('${{ github.ref }}'.StartsWith('refs/tags/v')) {
-              $FLOORP_VERSION = '${{ github.ref }}'.Replace('refs/tags/v', '')
-            } else {
-              # Default version from build.properties
-              $FLOORP_VERSION = (Get-Content build.properties | Where-Object { $_ -match 'app.version = (.+)' } | ForEach-Object { $matches[1] })
-            }
+            Write-Host "Version input is required. Please use workflow_dispatch to trigger this workflow."
+            exit 1
           }
           echo "FLOORP_VERSION=$FLOORP_VERSION" >> $env:GITHUB_ENV
           echo "Using Floorp version: $FLOORP_VERSION"
