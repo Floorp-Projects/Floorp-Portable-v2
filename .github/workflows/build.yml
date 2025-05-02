@@ -45,7 +45,7 @@ jobs:
 
       - name: Set environment variables
         run: |
-          $FLOORP_VERSION = '${{ github.event.inputs.version }}'
+          $FLOORP_VERSION = '${{ inputs.version }}'
           if (-not $FLOORP_VERSION) {
             Write-Host "Version input is required. Please use workflow_dispatch to trigger this workflow."
             exit 1
@@ -98,6 +98,7 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           latest: true
+          tag_name: v${{ env.FLOORP_VERSION }}
           files: |
             bin/release/floorp-portable-win64-${{ env.FLOORP_VERSION }}-*.7z
           name: Floorp Portable ${{ env.FLOORP_VERSION }}

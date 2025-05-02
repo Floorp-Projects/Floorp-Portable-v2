@@ -98,7 +98,7 @@ Sample HTML for your website:
 
 ## License
 
-MIT License. See `LICENSE` for more details.
+Mozilla Public License 2.0 See `LICENSE` for more details.
 
 ## Credits
 
