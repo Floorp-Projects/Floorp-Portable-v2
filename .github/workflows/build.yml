@@ -90,6 +90,11 @@ jobs:
           # Generate version info
           goversioninfo
 
+      - name: Clone portapps core
+        run: |
+          cd ../
+          git clone https://github.com/Floorp-Projects/portapps.git portapps
+
       - name: Build portable app
         run: |
           ant release
