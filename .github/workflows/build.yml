@@ -71,7 +71,7 @@ jobs:
 
       - name: Clone portapps
         run: |
-          git clone https://github.com/portapps/portapps.git ../portapps
+          git clone https://github.com/Floorp-Projects/portapps ../portapps
 
       - name: Prepare build
         run: |
