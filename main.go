@@ -25,17 +25,12 @@ import (
 type config struct {
 	Profile           string `yaml:"profile" mapstructure:"profile"`
 	MultipleInstances bool   `yaml:"multiple_instances" mapstructure:"multiple_instances"`
-	Locale            string `yaml:"locale" mapstructure:"locale"`
 	Cleanup           bool   `yaml:"cleanup" mapstructure:"cleanup"`
 }
 
 var (
 	app *portapps.App
 	cfg *config
-)
-
-const (
-	defaultLocale = "en-US"
 )
 
 func init() {
@@ -45,7 +40,6 @@ func init() {
 	cfg = &config{
 		Profile:           "default",
 		MultipleInstances: false,
-		Locale:            defaultLocale,
 		Cleanup:           false,
 	}
 
@@ -106,10 +100,6 @@ func main() {
 		}()
 	}
 
-	// Locale - Just use default locale since we don't download language packs
-	locale := defaultLocale
-	log.Info().Msgf("Using default locale: %s", locale)
-
 	// Multiple instances
 	if cfg.MultipleInstances {
 		log.Info().Msg("Multiple instances enabled")
@@ -136,15 +126,7 @@ pref("general.config.obscure_value", 0);`); err != nil {
 	if err != nil {
 		log.Fatal().Err(err).Msg("Cannot create portapps.cfg")
 	}
-	mozillaCfgData := struct {
-		Locale string
-	}{
-		locale,
-	}
-	mozillaCfgTpl := template.Must(template.New("mozillaCfg").Parse(`// Set locale
-pref("intl.locale.requested", "{{ .Locale }}");
-
-// Extensions scopes
+	mozillaCfgTpl := template.Must(template.New("mozillaCfg").Parse(`// Extensions scopes
 lockPref("extensions.enabledScopes", 4);
 lockPref("extensions.autoDisableScopes", 3);
 
@@ -154,7 +136,7 @@ pref("browser.rights.3.shown", true);
 // Don't show WhatsNew on first run after every update
 pref("browser.startup.homepage_override.mstone", "ignore");
 `))
-	if err := mozillaCfgTpl.Execute(mozillaCfgFile, mozillaCfgData); err != nil {
+	if err := mozillaCfgTpl.Execute(mozillaCfgFile, nil); err != nil {
 		log.Fatal().Err(err).Msg("Cannot write portapps.cfg")
 	}
 
@@ -237,11 +219,6 @@ func createPolicies() error {
 	}
 
 	return nil
-}
-
-func checkLocale() (string, error) {
-	// Since we're not downloading language packs, just return the default locale
-	return defaultLocale, nil
 }
 
 func updateAddonStartup(profileFolder string) error {

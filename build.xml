@@ -34,6 +34,11 @@
     <sevenzip src="${build.path}/*" dest="${release.path}\${release.7z.filename}" format="7z"/>
   </target>
 
+  <!-- Explicitly define the core.dir target to avoid the reference error -->
+  <target name="core.dir" description="Empty target to avoid reference error">
+    <echo message="Mock target for core.dir to prevent reference errors" />
+  </target>
+
   <target name="prepare">
     <echo message="Preparing release..."/>
     <delete dir="${tmp.path}\extract2"/>

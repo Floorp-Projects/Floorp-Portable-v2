@@ -69,10 +69,6 @@ jobs:
           $content | Set-Content build.properties
           cat build.properties
 
-      - name: Clone portapps
-        run: |
-          git clone https://github.com/Floorp-Projects/portapps ../portapps
-
       - name: Prepare build
         run: |
           # Install required Go tools
@@ -96,7 +92,7 @@ jobs:
 
       - name: Build portable app
         run: |
-          ant release -Dcore.dir=../portapps
+          ant release
 
       - name: List built artifacts
         run: |
