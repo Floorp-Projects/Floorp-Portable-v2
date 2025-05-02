@@ -80,11 +80,14 @@ jobs:
           go install -v github.com/josephspurrier/goversioninfo/cmd/goversioninfo
 
           # Make sure resources are ready
-          mkdir -p assets
-          if (Test-Path res/Floorp.lnk) {
+          if (-not (Test-Path "assets")) {
+            New-Item -Path "assets" -ItemType Directory -Force
+          }
+
+          if (Test-Path "res\Floorp.lnk") {
             go-bindata -prefix res/ -pkg assets -o assets/assets.go res/Floorp.lnk
           } else {
-            cp res/Firefox.lnk res/Floorp.lnk
+            Copy-Item -Path "res\Firefox.lnk" -Destination "res\Floorp.lnk" -Force
             go-bindata -prefix res/ -pkg assets -o assets/assets.go res/Floorp.lnk
           }
 
