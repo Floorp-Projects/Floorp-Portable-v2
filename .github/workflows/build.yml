@@ -62,6 +62,7 @@ jobs:
 
       - name: Prepare build
         run: |
+          (Get-Content build.properties) | foreach { $_ -replace "app.version = .+", "app.version = $env:FLOORP_VERSION" } | Set-Content build.properties
           # Install required Go tools
           go install -v github.com/kevinburke/go-bindata/v4/go-bindata
           go install -v github.com/josephspurrier/goversioninfo/cmd/goversioninfo
