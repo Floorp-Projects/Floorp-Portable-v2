@@ -131,13 +131,13 @@ func main() {
 		}
 	}
 
-	// Cleanup on exit
 	if cfg.Cleanup {
 		defer func() {
 			utl.Cleanup([]string{
-				path.Join(os.Getenv("APPDATA"), "Mozilla", "Floorp"),
-				path.Join(os.Getenv("LOCALAPPDATA"), "Mozilla", "Floorp"),
-				path.Join(os.Getenv("USERPROFILE"), "AppData", "LocalLow", "Mozilla"),
+				path.Join(os.Getenv("APPDATA"), "Floorp"),
+				path.Join(os.Getenv("LOCALAPPDATA"), "Floorp"),
+				path.Join(os.Getenv("USERPROFILE"), "AppData", "LocalLow", "Floorp"),
+				path.Join(os.Getenv("USERPROFILE"), "AppData", "Roaming", "Floorp"),
 			})
 		}()
 	}
