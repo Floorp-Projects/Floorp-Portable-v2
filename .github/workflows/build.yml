@@ -34,7 +34,7 @@ jobs:
       - name: Set up Ant
         uses: cedx/setup-ant@v6
         with:
-          version: "1.10.15"
+          version: "1.10.18"
 
       - name: Check environment
         run: |
