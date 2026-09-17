@@ -32,9 +32,20 @@ jobs:
           node-version: "20"
 
       - name: Set up Ant
-        uses: cedx/setup-ant@v6
-        with:
-          version: "1.10.18"
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $antVersion = '1.10.18'
+          $antArchive = Join-Path $env:RUNNER_TEMP "apache-ant-$antVersion-bin.zip"
+          $antDirectory = Join-Path $env:RUNNER_TEMP "apache-ant-$antVersion"
+          $expectedHash = 'f86d7b263bc7c6903a91532943f1c8ecccc17dd999851a796617e79795908d7a666cbe999b9ecf06735cc7e830f50dca9f49b37bb5f6f02a0a3803cd22b558b0'
+          Invoke-WebRequest -Uri "https://archive.apache.org/dist/ant/binaries/apache-ant-$antVersion-bin.zip" -OutFile $antArchive
+          if ((Get-FileHash -LiteralPath $antArchive -Algorithm SHA512).Hash -ne $expectedHash) {
+            throw 'Apache Ant archive SHA-512 mismatch'
+          }
+          Expand-Archive -LiteralPath $antArchive -DestinationPath $env:RUNNER_TEMP
+          "ANT_HOME=$antDirectory" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+          (Join-Path $antDirectory 'bin') | Out-File -FilePath $env:GITHUB_PATH -Append -Encoding utf8
 
       - name: Check environment
         run: |
